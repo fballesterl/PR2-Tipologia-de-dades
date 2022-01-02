@@ -2,31 +2,21 @@
 
 ## Descripció
 
-Extreu informació sobre les 20 criptomonedes més importants del mercat. La informació s'extreu de la pàgina web [Cryptocurrency Market Capitalizations](https://coinmarketcap.com/es/all/views/all/).
+Estudi de les característiques més habituals dels allotjaments turístics a Espanya juntament amb les variables més importants que determinen el preu/nit final per tal de predir la variable objectiu preu/nit segons les característiques de l'allotjament.
 
-## Membres de la Pràctica 1
+[Cryptocurrency Market Capitalizations](https://coinmarketcap.com/es/all/views/all/).
+
+## Membres de la Pràctica2
 
 Francesc Ballester Lecina i Oriol Raurell Gan.
 
 ## Arxius
 
-* `top_criptocurrencies.csv`: Conjunt de dades generat.
-* `src/PR1_M2951_fballesterl_oraurell.py`: Fitxer amb la implementació de web scraping desenvolupat en python.
-* `PR1_M2951_fballesterl_oraurell.pdf`: Document amb les respostes plantejades a la pràctica.
+* `data/alojamientos-turisticos-sample.csv`: Conjunt de dades amb informació de diferents allotjaments turistics a Airbnb.
+* `data/clean_alojamientos-turisticos-sample.csv`: Conjunt de dades filtrat.
+* `src/PR2_M2951_fballesterl_oraurell.Rmd`: Fitxer amb l'anàlisi estadistic desenvolupat en R.
+* `src/PR2_M2951_fballesterl_oraurell.html`: Fitxer amb l'anàlisi estadistic desenvolupat en R en format .html.
 
-## Conjunt de dades
+## Llicència
 
-El conjunt de dades conté informació actualitzada sobre les 20 principals criptomonedes del mercat.
-
-Els atributs que apareixen en el conjunt de dades són:
-* `Nom`: Nom de la criptomoneda. 
-* `Simbol`: Simbol de la criptomoneda. 
-* `Cap. de mercat` : Valor de capitalització de mercat.
-* `Preu` : Preu de la criptomoneda en dolars.
-* `En circiulació` : Nombre de criptomonedes que hiha en circulació.
-* `Volum(24h)` : Volum de dolars tractat en les 24h.
-* `%1h` : Variació del preu de la criptomoneda en 1h.
-* `%24h` : Variació del preu de la criptomoneda en 24h.
-* `%7d` : Variació del preu de la criptomoneda respecte la setmana anterior.
-* `Dia`: Dia de la extracció.
-* `Hour`: Hora de la extracció.
+El contenido de este proyecto esta licencia bajo la Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International, y el código fuente usadao para mostrar este contenido esta licenciado bajo la MIT license.
