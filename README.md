@@ -4,7 +4,7 @@
 
 Estudi de les característiques més habituals dels allotjaments turístics a Espanya juntament amb les variables més importants que determinen el preu/nit final per tal de predir la variable objectiu preu/nit segons les característiques de l'allotjament.
 
-## Membres de la Pràctica2
+## Membres de la Pràctica 2
 
 Francesc Ballester Lecina i Oriol Raurell Gan.
 
