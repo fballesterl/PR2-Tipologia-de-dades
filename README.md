@@ -12,5 +12,6 @@ Francesc Ballester Lecina i Oriol Raurell Gan.
 
 * `data/alojamientos-turisticos-sample.csv`: Conjunt de dades amb informació de diferents allotjaments turistics a Airbnb.
 * `data/clean_alojamientos-turisticos-sample.csv`: Conjunt de dades filtrat.
+* `PR2_M2951_fballesterl_oraurell.pdf`: Document amb les respostes plantejades a la pràctica.
 * `src/PR2_M2951_fballesterl_oraurell.Rmd`: Fitxer amb l'anàlisi estadistic desenvolupat en R.
 * `src/PR2_M2951_fballesterl_oraurell.html`: Fitxer amb l'anàlisi estadistic desenvolupat en R en format .html.
