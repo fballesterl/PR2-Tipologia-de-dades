@@ -1,0 +1,466 @@
+---
+title: 'Pràctica 2: Neteja i anàlisi de les dades'
+author: "Francesc Ballester Lecina - Oriol Raurell Gan"
+output:
+  pdf_document:
+    toc: yes
+    toc_depth: '2'
+  html_document:
+    highlight: default
+    number_sections: yes
+    theme: cosmo
+    toc: yes
+    toc_depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introducció, descripció i objectius de l'activitat
+
+## Introducció
+
+La problemàtica de l'augment del nombre d'allotjaments turístics en grans ciutats com ara Barcelona ha provocat canvis en la legislació per tal de regular el sector. Estudiar una mostra de diferents allotjaments que s'ofereixen en les plataformes més importants, com per exemple Airbnb, ens permet entendre quines són les característiques que disposa l'allotjament turístic més habitual així com les variables que determinen el preu final per nit.
+
+## Descripció i objectius
+
+El dataset original s'ha obtingut de la plataforma kaggle:
+
+https://www.kaggle.com/datamarket/alojamientos-tursticos
+
+A continuació es mostra el dataset original al complet i el resum de les variables:
+
+```{r ,eval=TRUE,echo=TRUE}
+
+# Importem el joc de dades original
+data<-read.csv("./alojamientos-turisticos-sample.csv", sep=",", header=T)
+
+# Resum de les variables
+str(data)
+
+```
+
+Com podem observar existeix un gran nombre de variables i de diferents tipus. Trobem des de descripcions obertes dels allotjaments, comentaris dels usuaris, valoracions.. fins a les característiques de cada allotjament com ara el nombre d'habitacions, el preu, número mínim i màxim de nits entre d'altres.
+
+Per tant, es disposa de suficient informació que tot seguit netejarem per evitar les variables que no aporten valor estadístic a l'estudi, com ara els comentaris oberts dels usuaris entre altres variables que quedaran fora de l'anàlisi per facilitar la comprensió.
+
+L'objectiu principi de l'estudi és mostrar quines són les característiques més habituals dels allotjaments turístics a Espanya juntament amb les variables més importants que determinen el preu/nit final per tal de predir la variable objectiu preu/nit segons les característiques de l'allotjament.
+
+# Neteja de dades
+
+El primer pas és definir les variables del joc de dades original que utilitzarem per a l'anàlisi.
+
+## Selecció de variables
+
+```{r ,eval=TRUE,echo=TRUE}
+
+# Selecció de variables del joc de dades original
+data <- data[, c(11,12,13,14,15,17,18,19,25,28,29,30,31,32,33,34,39)]
+
+```
+
+## Tipus de variables
+
+```{r ,eval=TRUE,echo=TRUE}
+
+# Resum de les variables
+str(data)
+
+```
+
+Definició de les variables escollides: 
+ 
+    room_type: tipus caràcter que indica el tipus d'allotjament                 
+    accommodates: tipus integer amb el nombre màxim de persones per allotjament              
+    bathroom: tipus integer amb el nombre de banys de l'allotjament               
+    bedrooms: tipus integer amb el nombre d'habitacions de l'allotjament                   
+    beds: tipus integer amb el nombre de llits de l'allotjament                            
+    price: tipus numèric del preu per nit de l'allotjament                      
+    minimum_nights: tipus integer amb el nombre mínim de nits             
+    maximum_nights: tipus integer amb el nombre màxim de nits             
+    number_of_reviews: tipus integer amb el nombre de comentaris de l'allotjament           
+    review_scores_rating: tipus numèric amb la puntuació dels usuaris sobre l'allotjament       
+    review_scores_accuracy: tipus numèric amb la precisió dels detalls de l'allotjament     
+    review_scores_cleanliness: tipus numèric amb les condicions higièniques de l'allotjament  
+    review_scores_checkin: tipus numèric amb la facilitat del moment d'entrada al allotjament       
+    review_scores_communication: tipus numèric que valora la comunicació del propietari amb els usuaris
+    review_scores_location: tipus numèric que valora la zona on està situat l'allotjament     
+    review_scores_value: tipus numèric que puntua sobre l'avaluació de l'allotjament turístic        
+    city: tipus caràcter que indica la ciutat on es troba el allotjament                       
+
+    https://datamarket.es/#alojamientos-turisticos-dataset
+
+## Resum de les variables
+
+```{r ,eval=TRUE,echo=TRUE}
+
+# Resum estadístic de les variables
+summary(data)
+
+```
+
+De manera general observem com disposem d'informació d'allotjaments turístics amb grans diferències en les característiques. Existeixen allotjaments on només pot residir 1 usuari i altres fins a 27, encara que la mitjana es troba en 4 persones i, per tant, parlarem sobretot d'allotjaments de dimensions estàndards. Les característiques d'un allotjament estàndard són la disponibilitat d'entre 1 i 2 banys (1,5 de mitjana), 2 habitacions i 3 llits, encara que existeixen allotjaments amb 22 banys (possiblement ja es detecta algun outlier), 16 habitacions o 40 llits. El preu per nit es troba de mitjana en els 129€, encara que la mediana dels allotjaments analitzats es troba per sota dels 76€/nit. 
+
+Pel que fa a nombre de nits mínim, observem com la mitjana es troba en 5 nits, però la gran majoria es tracta d'allotjaments d'una o dues nits mínimes de reserva. Pel que fa al nombre màxim de nits es detecta un possible error en les dades que més endavant caldrà corregir. 
+
+El nombre de reviews d'usuaris destacar que mínim el 25% d'allotjaments no es disposa de cap, tot i així la mitjana es de gairebé 25 comentaris per allotjament, amb un màxim de 535.
+
+La variable review_scores_rating valora de 0 a 100 l'opinió donada pels usuaris sobre l'allotjament, mentre que la resta de variables de puntuació són sobre un màxim de 10. Observem com la majora de mitjanes de valoració es troba al voltant del 9 encara que es disposa de moltes reviews sense valoració informada que més endavant corregirem.
+
+Finalment, queda el camp city on s'informa de la ciutat on es troba l'allotjament.
+
+## Eliminació de valors nuls i outliers
+
+```{r ,eval=TRUE,echo=TRUE}
+
+# Verifiquem nombre valors absents
+missing <- data[is.na(data),]
+dim(missing)
+
+# Creem una copia del joc de dades original per la neteja
+data_clean <- data
+
+# Reemplacem les variables reviews per la mitjana de cada una d'elles
+data_clean$review_scores_rating[is.na(data_clean$review_scores_rating)]<-round(mean(data_clean$review_scores_rating,na.rm=TRUE),digits=0)
+data_clean$review_scores_accuracy[is.na(data_clean$review_scores_accuracy)]<-round(mean(data_clean$review_scores_accuracy,na.rm=TRUE),digits=0)
+data_clean$review_scores_cleanliness[is.na(data_clean$review_scores_cleanliness)]<-round(mean(data_clean$review_scores_cleanliness,na.rm=TRUE),digits=0)
+data_clean$review_scores_checkin[is.na(data_clean$ review_scores_checkin)]<-round(mean(data_clean$ review_scores_checkin,na.rm=TRUE),digits=0)
+data_clean$review_scores_communication[is.na(data_clean$review_scores_communication)]<-round(mean(data_clean$review_scores_communication,na.rm=TRUE),digits=0)
+data_clean$review_scores_location[is.na(data_clean$review_scores_location)]<-round(mean(data_clean$review_scores_location,na.rm=TRUE),digits=0)
+data_clean$review_scores_value[is.na(data_clean$review_scores_value)]<-round(mean(data_clean$review_scores_value,na.rm=TRUE),digits=0)
+
+# Reemplacem les variables bathrooms, bedrooms i beds amb la moda de cada variable
+# Es crea la funció per extreure la moda
+Mode <- function(x) {
+  ux <- unique(x)
+  ux[which.max(tabulate(match(x, ux)))]}
+
+# S'aplica la moda als valors perduts de les variables
+data_clean$bathrooms[is.na(data_clean$bathrooms)] <- Mode(data_clean$bathrooms)
+data_clean$bedrooms[is.na(data_clean$bedrooms)] <- Mode(data_clean$bedrooms)
+data_clean$beds[is.na(data_clean$beds)] <- Mode(data_clean$beds)
+```
+
+Per tractar els valors absents s'ha utilitzat diferents mètodes per omplir els gairebé 2.800 registres sense valors. Per donar un valor a les reviews s'usa la mitjana de cada variable independent de la resta de variables. Com s'ha estudiat anteriorment, les mitjanes de valoracions es troben entre 9 i 9,5 que al treballar sense nombres decimals, els valors buits seran substituïts amb un 9 o amb un 10 segons la mitjana de cada variable.
+
+Pel tractament de les variables bathrooms, bedrooms i beds, utilitzarem la moda, valor que més vegades es repeteix en cada una de les variables.
+
+```{r ,eval=TRUE,echo=TRUE}
+
+# Identifiquem outliers i apliquem diferents criteris
+
+# En el cas del nombre màxim de nits s'eliminen els outliers al ser pocs registres i considerar-se com errors
+box_MaxNights <- boxplot(data_clean$maximum_nights, col="skyblue", frame.plot=F, tittle ="MaxNights", main="Nombre de nits màxim")
+box_MaxNights$out
+data_clean<-data_clean[!(data_clean$maximum_nights %in% box_MaxNights$out),]
+
+# En el cas del nombre mínim de nits s'eliminen els outliers superiors a 60 nits
+box_MinNights <- boxplot(data_clean$minimum_nights, col="skyblue", frame.plot=F, main="Nombre de nits mímim")
+sum(data_clean$minimum_nights>60)
+data_clean <- data_clean[!(data_clean$minimum_nights > 60),]
+
+# En el cas del preu eliminem els registres superiors a 4000
+box_Price <- boxplot(data_clean$price, col="skyblue", frame.plot=F, main="Preus per nit")
+sum(data_clean$price>4000)
+data_clean <- data_clean[!(data_clean$price > 4000),]
+
+# Revisem el nombre de registres que seran analitzats
+nrow(data_clean)
+
+```
+
+Un cop revisats els valors màxims de les variables numèriques del joc de dades es revisa que les variables maximum_nights, minimum_nights i price són les que tenen més probabilitats de contenir valors outliers. En els diagrames de caixes observem com és així, i es determinen diferents procediments per eliminar-los. Encara que no és del tot recomanable eliminar registres per possibles outliers, de l'estudi es detecta que es tracta d'errors com és en el cas del nombre màxim de nits o de valors fora de les característiques estàndards dels allotjaments a analitzar. 
+
+Per tant, es decideix eliminar els outliers de les variables maximum_nights, a més d'aquells registres el qual tenen un nombre mínim de 60 nits o que tenen un preu per nit major a 4.000€.
+
+El joc de dades finalment contindrà 9.932 registres dels inicialment 10.000.
+
+```{r ,eval=TRUE,echo=TRUE}
+
+# Es revisa que tots els camps es troben nets, sense valors perduts i cap outlier destacat.
+summary(data_clean)
+
+# Exportació del joc de dades net
+write.csv(data_clean,"./clean_alojamientos-turisticos-sample.csv", row.names = FALSE)
+
+```
+
+# Estudi de les distribucions i correlacions
+
+A continuació mostrem gràficament les dades més importants del conjunt de dades un cop net.
+
+```{r ,eval=TRUE,echo=TRUE}
+
+# Carreguem les llibreries necessàries
+if (!require('ggplot2')) install.packages('ggplot2'); library('ggplot2')
+if (!require('dplyr')) install.packages('dplyr'); library('dplyr')
+if (!require('ggcorrplot')) install.packages('ggcorrplot'); library('ggcorrplot')
+
+# Histograma de preus
+histobyPrice<-ggplot(data_clean,aes(price)) + geom_histogram(bins=30) + labs(x="Preu per nit (€)", y="Allotjaments") + guides(fill=guide_legend(title=""))+ 
+  scale_fill_manual(values=c("blue","#008000")) + ggtitle("Nombre d'allotjaments per preu per nit")
+histobyPrice
+
+```
+
+Observem com la gran majoria d'allotjaments es situen per sota dels 200€/nit.
+
+```{r ,eval=TRUE,echo=TRUE}
+
+# Gràfic per ciutats
+plotbyCity <- ggplot(data_clean,aes(city)) +geom_bar() + labs(x="Ciutats", y="Allotjaments") + guides(fill=guide_legend(title="")) + 
+  scale_fill_manual(values=c("blue","#008000")) +ggtitle("Allotjaments per ciutat")
+plotbyCity
+```
+
+Les ciutats amb més ofertes d'allotjament són Barcelona, seguit de Madrid, Mallorca i Girona. 
+
+```{r ,eval=TRUE,echo=TRUE}
+#plotbyRisc<-ggplot(data_Risc,aes(default))+geom_bar() + labs(x="Risc", y="Clients") + guides(fill=guide_legend(title="")) + 
+  #scale_fill_manual(values=c("blue","#008000"))  +ggtitle("Risc")
+
+plotbyRoomCity <- ggplot(data_clean,aes(city,fill=room_type)) +geom_bar() + labs(x="Ciutats", y="Allotjaments") + guides(fill=guide_legend(title="")) +
+  ggtitle("Tipus d'allotjament per ciutat")
+plotbyRoomCity
+```
+
+La gran majoria d'allotjaments disponibles són d'apartaments sencers, encara que tambè existeix força oferta d'habitacions privades. En canvi d'habitcaions d'hotel o d'habitacions compartides no existeix un gran nombre d'ofertes en la plataforma Airbnb. 
+
+```{r ,eval=TRUE,echo=TRUE}
+
+# Mostrem gràficament les correlacions existents entre les característiques numèriques del joc de dades data_num <- dplyr::select_if(data, is.numeric)
+data_num <- dplyr::select_if(data_clean, is.numeric)
+r <- cor(data_num, use="complete.obs")
+ggcorrplot(r,hc.order = TRUE, type = "lower")
+
+```
+
+Finalment, elaborem un primer anàlisi gràfic de correlacions per poder començar a predir quines variables afecten en major mesura al preu.
+
+Com hem comentat anteriorment, totes les reviews mostraven uns valors força elevats i semblants, per tant no determinen el valor del preu. En canvi, si que observem una correlació positiva amb el nombre d'habitacions, llits i nombre de persones. 
+
+
+# Normalització
+
+## Revisió de dades normalitzades
+
+Un cop tenim les dades necessàries per a l'estudi, comprovarem si la variable a analitzar 'price' segueix una distribució normal. Per això, realitzarem una inspecció visual mitjançant els gràfics quantile-quantile plot i l'histograma, i un contrast de normalitat de Lilliefors.
+
+```{r ,eval=TRUE,echo=TRUE}
+
+#Carreguem les llibreries
+if (!require('kableExtra')) install.packages('kableExtra'); library('kableExtra')
+if (!require('knitr')) install.packages('knitr'); library('knitr')
+if (!require('nortest')) install.packages('nortest'); library('nortest')
+
+#Gràfics
+par(mfrow=c(1,3))
+#Histograma
+hist(data_clean$price)
+qqnorm(data_clean$price)
+#Gràfic quantile
+qqline(data_clean$price)
+#Costrast de normalitat
+lillie.test(data_clean$price)
+
+```
+
+Com podem veure en el gràfic Q-Q, els punts de la mostra no es representen sobre la distribució teòrica, de manera que no podríem assumir que té una distribució normal.
+Per altre banda, en el test de Lilliefors s'obté un pvalue molt petit, de manera que no podem afirmar que la variable 'price' segueixi una distribució normal.
+
+Per tant, no podem afirmar que la 'price' es distribueix segons una distribució normal.
+
+## Transformació de dades normalitzades
+
+A pesar que la variable 'price' no segueix una distribució normal, no realitzarem cap normalització en la variable, ja que volem treballar amb els valors reals.
+
+## Aplicació de proves estadístiques
+
+### Contrast d'hipòtesis de dues mostres
+
+Es pressuposa que les habitacions dels hotels acostumen a ser més cares que les habitacions privades i els apartaments. De manera que, volem conèixer si hi ha diferències entre els preus de les habitacions dels hotels i els apartaments, i les habitacions privades.
+En aquest cas, aplicarem un test d'hipòtesi de dues mostres sobre la mitjana, ja que tenim una mostra de grandària gran(>30), de manera que pel teorema del límit central, assumim normalitat. Com que no coneixem la variància de la població, aplicarem una distribució de t.
+
+```{r ,eval=TRUE,echo=TRUE}
+
+#Seleccionem els preu del conjunt de dades del tipus habitació d'hotel
+hotel_room <- data_clean$price[data_clean$room_type=="Hotel room"]
+#Seleccionem els preu del conjunt de dades del tipus habitació privada
+private_room <- data_clean$price[data_clean$room_type=="Private room"]
+#Seleccionem els preu del conjunt de dades del tipus habitació apartament
+apartment <- data_clean$price[data_clean$room_type=="Entire home/apt"]
+
+#Mitjana del preu de les habitacions dels hotels
+mean(hotel_room)
+#Mitjana del preu de les habitacions privades
+mean(private_room)
+#Mitjana del preu dels apartaments
+mean(apartment)
+
+```
+
+Observant la mitja de preus, fa pensar que el preu de les habitacions dels hotels són més cares que les habitacions privades i els apartaments.
+
+```{r ,eval=TRUE,echo=TRUE}
+
+#Apliquem el test d’hipòtesi de dues mostres sobre la mitjana de preu les habitacions dels hotels i les habitacions privades
+t.test(hotel_room, private_room, alternative = "greater")
+
+#Apliquem el test d’hipòtesi de dues mostres sobre la mitjana de preu les habitacions dels hotels i els apartaments
+t.test(hotel_room, apartment, alternative = "greater")
+
+```
+
+Observem que els valors de p són menors que el valor de significació fixat(0.05), de manera que rebutgem la hipòtesi nul·la. Per tant, podem afirmar que els preus de les habitacions dels hotels són més cares que les habitacions privades i els apartaments.
+
+### Correlació entre variables
+
+Ara realitzarem un anàlisi de correlació entre les diferents variables per determinar quines variables estan més correlacionades amb el preu de les habitacions. Per això, durem a terme una correlació de Person.
+
+```{r ,eval=TRUE,echo=TRUE}
+
+#Coeficients de corrlació de Pearson
+cor(data_clean[,c("price", "accommodates", "bathrooms", "bedrooms", "beds", "review_scores_rating", "review_scores_location", "review_scores_value")], method = "pearson", use="pairwise.complete.obs")
+
+```
+
+A partir dels resultats obtinguts, podem veure que les variables: 'accomodates', 'bedrooms', 'bathrooms' són les variables que estan més correlacionades amb la variable 'price'. Té sentit que les habitacions més cares estiguin relacionades amb el nombre de persones que es poden allotjar, el nombre d'habitacions i el nombre de banys que té l'allotjament.
+
+Tanmateix, no podem considerar que hi hagi una correlació forta, ja que els coeficients de correlació són de 0.4 una correlació moderada-baixa.
+
+### Model de regressió lineal
+
+Un dels objectius de l'estudi és conèixer quins són característiques influeixen en els preus dels allotjaments de Airbnb. Per això, calcularem un model de regressió lineal per tal de conèixer l'equació del model que ens permeti conèixer el preu de l'allotjament a partir de les seves característiques.
+
+Per tal d'obtenir un model eficient, utilitzarem diferents models amb les variables més correlacionades amb el preu a partir dels resultats obtinguts en en la correlació de variables. Per tal d'avaluar la bondat de l'ajust del model utilizarem el coeficient de determinació (R2).
+
+```{r ,eval=TRUE,echo=TRUE}
+
+#Creació del model a partir de la variable 'accomodates'
+model_1<- lm(price~accommodates, data=data_clean)
+
+#Resum del model
+summary(model_1)
+
+```
+
+Podem veure que amb la variable 'accomodates' és significativa amb un p-valor de 2.2e-16 existint una relació lineal positiva entre totes dues variables, amb un coeficient de determinació ajustat de 0.1833. Malgrat això, el coeficient de determinació és força baix per explicar el model.
+
+```{r ,eval=TRUE,echo=TRUE}
+
+#Creació del model afegint la variable 'bedrooms'
+model_2<- lm(price~accommodates+bedrooms, data=data_clean)
+
+#Resum del model
+summary(model_2)
+```
+
+Afegint la variable 'bedrooms' al model, s'observa que la variable és significativa i s'aconsegueix millorar el coeficient de determinació (0.1956) però segueix insuficient per explicar correctament el model.
+
+```{r ,eval=TRUE,echo=TRUE}
+
+#Creació del model afegint la variable 'bathrooms'
+model_3<- lm(price~accommodates+bedrooms+bathrooms, data=data_clean)
+
+#Resum del model
+summary(model_3)
+```
+
+Afegint la tercera variable amb més correlació amb el preu 'bedrooms' al model, veiem que la variable és significativa i el coeficient de determinació millora (0.218) però no el suficient per considerar el model com a acceptable.
+
+```{r ,eval=TRUE,echo=TRUE}
+
+#Creació del model a partir de la variable 'city'
+model_4<- lm(price~factor(city), data=data_clean)
+
+#Resum del model
+summary(model_4)
+```
+
+En aquest cas, volem explicar el preu a partir de la variable 'city'. Podem veure com el model és significatiu amb un p_valor de 2.2e-16 existint una relació lineal negativa entre les ciutats de Girona, Màlaga i València. Això no obstant, el coeficient de determinació és molt petit (0.05), de manera que podem considerar el model força pobre.
+
+```{r ,eval=TRUE,echo=TRUE}
+
+#Creació del model afegint la variable 'city'
+model_5<- lm(price~accommodates+bedrooms+bathrooms+factor(city), data=data_clean)
+
+#Resum del model
+summary(model_5)
+```
+
+Podem veure que en afegir la variable 'city' al model, el coeficient de determinació millora (0.2245) però era d'esperar tenint en compte la bondat de l'ajust entre la variable 'price' i 'city' en el model anterior.
+
+Per tant, no podem considerar el model prou consistent per a explicar el preu a partir d'aquestes variables.
+
+## Predicció del model
+
+Per tal de comprovar la validesa del model, realitzarem la predicció del model comprovant els valors predits amb els valors reals. Crearem un conjunt d'entrenament per crear el model i un conjunt de prova per predir el preu de l'allotjament a partir del model que hem creat amb el conjunt d'entrenament.
+
+```{r ,eval=TRUE,echo=TRUE}
+
+#Mida del conjunt d'entreenament
+ntrain <- nrow(data_clean)*0.8
+
+#Mida del conjunt de prova
+ntest <- nrow(data_clean)*0.2
+set.seed(1)
+
+#Seleccionem elements de manera aleatoria del conjunt de dades
+index_train<-sample(1:nrow(data_clean),size = ntrain)
+
+#Conjunt d'entreenament
+train<-data_clean[index_train,]
+
+#Conjunt de proba
+test<-data_clean[-index_train,]
+
+#Creació del model a partir del conjunt d'entrenament
+model<-lm(price ~ accommodates + bedrooms + bathrooms + factor(city), data=train)
+
+#Resum del model
+summary(model)
+
+#Predicció del model
+prob <- predict(model, test, type="response")
+
+#Calcul diferència % entre valor real i valor predit
+mc_sl<-data.frame(real=test$price, predicted= prob, dif=ifelse(test$price>prob, -prob*100/test$price,prob*100/test$price) )
+
+#Taula amb els valors reals i valors predits
+colnames(mc_sl)<-c("Real","Predecido","Dif%") 
+head(mc_sl)
+
+```
+
+Podem veure que el model del conjunt d'entrenament, té un coeficient de determinació (R2) de 0.2115, el que provocarà que el model no ajusti del tot correctament els preus predits. A pesar d'això podem veure que les variables que hem utilitzat el model són significatives.
+
+Observant els resultats predits, podem veure que no acaba d'ajustar correctament els preus, cosa que ja havíem comentat prèviament.
+
+# Conclusions
+
+Encara que aparentment extreure conclusions hagi sigut més complicat de l'esperat, podem determinar una sèrie de resultats extrets de l'anàlisi elaborat.
+
+El fet que les variables de reviews del usuari es situessin la gran majoria per sobre del 9 ha fet que s'hagi de descartar aquest tipus de variables. El joc de dades s'ha mostrat massa homogeni el qual ha provocat no poder conèixer com afecten el preu final de l'allotjament. La correlació existent amb la variable preu no existia i, per tant, no han servit per determinar el valor de la variable objectiu. 
+
+Tot i així la resta de variables han permès extreure les següents conclusions:
+ 
+ - La gran majoria d'oferta d'allotjaments es troben en les ciutats més turístiques de l'Estat.
+ - Predominen els lloguers d'apartaments complets i el lloguer d'habitacions privades, sent les habitacions d'hotel d'un preu superior.
+ - Com era d'esperar inicialment, el fet que l'allotjament permeti allotjar-se més usuaris el preu s'incrementa, per tant d'igual manera, si disposa de més llits el mateix ocorrerà. 
+ - La poca significança de les variables existents provoca que s'obtingui un model predictiu de baix coeficient de determinació.
+
+Així que el joc de dades i les seves variables no han aconseguit respondre amb exactitud al problema inicialment plantejat. Es necessitaria estudiar si incorporar més variables, com per exemple el nivell de connexió amb transport públic o la proximitat als monuments més importants de la ciutat, millorarien el model predictiu. 
+
+# Taula de contribucions
+
+  CONTRIBUCIONS                   FIRMA
+  
+  Investigació prèvia             FBL, ORG
+  
+  Redacció de les respostes       FBL, ORG
+  
+  Desenvolupament codi            FBL, ORG
+  
+  
+
